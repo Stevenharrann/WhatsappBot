@@ -3,7 +3,8 @@ const welcome = require('./lib/welcome')
 const msgHandler = require('./msgHndlr')
 const options = require('./options')
 
-const start = async (client = new Client()) => {
+const startServer = async (client) => {
+    global.sclient = client
         console.log('[SERVER] Server Started!')
         // Force it to keep the current session
         client.onStateChanged((state) => {
@@ -28,24 +29,34 @@ const start = async (client = new Client()) => {
         
         client.onAddedToGroup(((chat) => {
             let totalMem = chat.groupMetadata.participants.length
-            if (!totalMem === 30) {}
-            else {
-                client.sendText(chat.groupMetadata.id, `Hello everyone! Thank you for inviting this bot, to see the menu please send *!Help* `)
-            }
-        }))
+            if (!totalMem === 30) {
+        } else {
+            client.sendText(chat.groupMetadata.id, `Hello *${chat.contact.name}*, Thanks for adding me. Use *!help* to see the menu. Enjoy the bot!`)
+        }
+    })
+   
+    // listening on Incoming Call 
+    ,client.onIncomingCall((call) => {
+          client.sendText(call.peerJid, '*Please stop calling! Call = Block*')
+            client.contactBlock(call.peerJid)
+            ban.push(call.peerJid)
+            fs.writeFileSync('./lib/banned.json', JSON.stringify(ban))
+        })
+        )}
+
+create({"headless": true,
+        "cacheEnabled": false,
+        "useChrome": true,
+        "chromiumArgs": [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--aggressive-cache-discard",
+            "--disable-cache",
+            "--disable-application-cache",
+            "--disable-offline-load-stale-cache",
+            "--disk-cache-size=0"
+        ]
+    })
     
-        /*client.onAck((x => {
-            const { from, to, ack } = x
-            if (x !== 3) client.sendSeen(to)
-        }))*/
-
-        // listening on Incoming Call
-        client.onIncomingCall(( async (call) => {
-            await client.sendText(call.peerJid, `Sorry, I can't receive calls. Call = block!`)
-            .then(() => client.contactBlock(call.peerJid))
-        }))
-    }
-
-create(options(true, start))
-    .then(client => start(client))
+   .then(async (client) => startServer(client))
     .catch((error) => console.log(error))
